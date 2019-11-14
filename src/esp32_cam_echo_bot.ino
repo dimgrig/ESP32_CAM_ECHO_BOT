@@ -76,7 +76,7 @@ void setup() {
   delay(100);
 
   // Attempt to connect to Wifi network:
-  Serial.print("Connecting Wifi: ");
+  Serial.print("[ESP]Connecting Wifi: ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
 
@@ -86,15 +86,15 @@ void setup() {
   }
 
   Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
+  Serial.println("[ESP]WiFi connected");
+  Serial.print("[ESP]IP address: ");
   Serial.println(WiFi.localIP());
 
 
   camera_init();
   SD_init();
 
-  Serial.print("Done");
+  Serial.print("[ESP] setup done");
 }
 
 void loop() {
@@ -103,14 +103,14 @@ void loop() {
       int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
 
       while(numNewMessages) {
-        Serial.println("got response");
+        Serial.println("[BOT]got response");
         for (int i=0; i<numNewMessages; i++) {
           if ((bot.messages[i].text == "image") || (bot.messages[i].text == "Image")) {
-            Serial.println("Photo");
+            Serial.println("[ESP]Start send image");
             
             //with SD card
             //String path = writeFile(SD_MMC);
-            //Serial.println(path);
+            //Serial.println([SD]path);
             //readFile(SD_MMC, path, bot.messages[i].chat_id);
 
             //without SD card
@@ -132,24 +132,24 @@ void loop() {
 //Read a file in SD card
 void readFile(fs::FS &fs, String path, String chat_id){
 
-    Serial.printf("Reading file: %s\n", path);
+    Serial.printf("[SD]Reading file: %s\n", path);
 
     file = fs.open(path);
     if(!file){
-        Serial.println("Failed to open file for reading");
+        Serial.println("[SD]Failed to open file for reading");
         return;
     }
 
-    Serial.print("Read from file: ");
+    Serial.print("[SD]Read from file: ");
     //Content type for PNG image/png
     String sent = bot.sendPhotoByBinary(chat_id, "image/jpeg", file.size(),
         isMoreDataAvailable,
         getNextByte);
 
     if (sent) {
-      Serial.println("was successfully sent");
+      Serial.println("[BOT]Was successfully sent");
     } else {
-      Serial.println("was not sent");
+      Serial.println("[BOT]Was not sent");
     }
 }
 
@@ -160,7 +160,7 @@ String writeFile(fs::FS &fs){
   // Сделать снимок с помощью камеры
   fb = esp_camera_fb_get();  
   if(!fb) {
-    Serial.println("Camera capture failed");
+    Serial.println("[ESP]Camera capture failed");
     return "";
   }
   // Инициализация EEPROM
@@ -175,22 +175,20 @@ String writeFile(fs::FS &fs){
   String path = "/picture" + String(pictureNumber) +".jpg";
 
   //fs::FS &fs = SD_MMC; 
-  Serial.printf("Picture file name: %s\n", path.c_str()); 
+  Serial.printf("[SD]Picture file name: %s\n", path.c_str()); 
   
   File file = fs.open(path.c_str(), FILE_WRITE); 
   if(!file){
-    Serial.println("Failed to open file in writing mode");
+    Serial.println("[SD]Failed to open file in writing mode");
   } 
   else {
     file.write(fb->buf, fb->len); 
-    Serial.printf("Saved file to path: %s\n", path.c_str());
+    Serial.printf("[SD]Saved file to path: %s\n", path.c_str());
     EEPROM.write(0, pictureNumber);
     EEPROM.commit();
   }
   file.close();
   esp_camera_fb_return(fb); 
-  Serial.printf("Saved");
-
   return path;
 }
 
@@ -203,24 +201,24 @@ void sendFile(fs::FS &fs, String chat_id){
   // Сделать снимок с помощью камеры
   fb = esp_camera_fb_get();  
   if(!fb) {
-    Serial.println("Camera capture failed");
+    Serial.println("[ESP]Camera capture failed");
   } else {
-    Serial.printf("Sending file");
+    Serial.printf("[BOT]Sending file");
 
     String path = "/picture_to_bot.jpg";
 
     file = fs.open(path, FILE_WRITE);
     if(!file){
-        Serial.println("Failed to open file in writing mode");
+        Serial.println("[SD]Failed to open file in writing mode");
     } 
     else {
       file.write(fb->buf, fb->len); 
-      Serial.printf("Saved file to path: %s\n", path.c_str());
+      Serial.printf("[SD]Saved file to path: %s\n", path.c_str());
       file.close();
 
       file = fs.open(path);
       if(!file){
-          Serial.println("Failed to open file for reading");
+          Serial.println("[SD]Failed to open file for reading");
       } else {
         //Content type for PNG image/png
         String sent = bot.sendPhotoByBinary(chat_id, "image/jpeg", file.size(),
@@ -228,9 +226,9 @@ void sendFile(fs::FS &fs, String chat_id){
             getNextByte);
 
         if (sent) {
-          Serial.println("was successfully sent");
+          Serial.println("[BOT]Was successfully sent");
         } else {
-          Serial.println("was not sent");
+          Serial.println("[BOT]Was not sent");
         }
 
       file.close(); 
@@ -287,24 +285,24 @@ void camera_init(){
   // Init Camera
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
+    Serial.printf("[CAM]Camera init failed with error 0x%x", err);
     return;
   }
 }
 
 void SD_init() {
  if(!SD_MMC.begin()){
-      Serial.println("Card Mount Failed");
+      Serial.println("[SD]Card Mount Failed");
       return;
   }
   uint8_t cardType = SD_MMC.cardType();
 
   if(cardType == CARD_NONE){
-      Serial.println("No SD_MMC card attached");
+      Serial.println("[SD]No SD_MMC card attached");
       return;
   }
 
-  Serial.print("SD_MMC Card Type: ");
+  Serial.print("[SD]SD_MMC Card Type: ");
   if(cardType == CARD_MMC){
       Serial.println("MMC");
   } else if(cardType == CARD_SD){
@@ -316,5 +314,5 @@ void SD_init() {
   }
 
   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-  Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+  Serial.printf("[SD]SD_MMC Card Size: %lluMB\n", cardSize);
 }
