@@ -49,53 +49,19 @@ int pictureNumber = 0;
 
 
 
-
-
-/*
-#define HOST "dg-telegram-bot-2.herokuapp.com"
-#define SSL_PORT 443
-
-
-typedef bool (*MoreDataAvailable)();
-typedef byte (*GetNextByte)();
-
-bool _debug = true;
-
-#define HANDLE_MESSAGES 1
-struct telegramMessage {
-  String text;
-  String chat_id;
-  String chat_title;
-  String from_id;
-  String from_name;
-  String date;
-  String type;
-  float longitude;
-  float latitude;
-  int update_id;
-};
-telegramMessage messages[HANDLE_MESSAGES];
-int last_message_received = 1;
-*/
-
-
 bool isMoreDataAvailable();
 byte getNextByte();
 
 void readFile(fs::FS &fs, String path, String chat_id);
 String writeFile(fs::FS &fs);
 
-
-
 File file;
-
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
 int Bot_mtbs = 5000; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
-
 
 
 void setup() {
@@ -124,164 +90,13 @@ void setup() {
   Serial.println(WiFi.localIP());
 
 
-
-
   camera_init();
   SD_init();
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-
-  if (!client.connected()) {
-      Serial.println(F("[BOT]Connecting to server"));
-    if (!client.connect(HOST, SSL_PORT)) {
-
-        Serial.println(F("[BOT]Conection error"));
-    } else {
-
-      Serial.println(F("[BOT]connected to server"));
-    }
-  }
-
-
-  //String command = "bot" + "611081761:AAFbNKvK1EcOeGacpb2BjicNlWh7tMNVkaI" + "/GetUpdates";
-  client.println("GET /bot611081761:AAFbNKvK1EcOeGacpb2BjicNlWh7tMNVkaI/GetUpdates?offset=" + 
-    String(last_message_received) + " HTTP/1.1");
-  client.println("Host: dg-telegram-bot-2.herokuapp.com");
-  client.println("User-Agent: ESP");
-  client.println("Accept: * / *");
-  client.println("Cache-Control: no-cache");
-  client.println("");
-  client.println("");
-
-  String mess = "";
-  long now;
-  bool avail;
-  char c;
-  int ch_count = 0;
-
-  now = millis();
-  avail = false;
-  int waitForResponse = 10000;
-  const int maxMessageLength = 2000;
-  while (millis() - now < waitForResponse) {
-    while (client.available()) {
-      char c = client.read();
-      // Serial.write(c);
-      if (ch_count < maxMessageLength) {
-        mess = mess + c;
-        ch_count++;
-      }
-      avail = true;
-    }
-    if (avail) {
-        Serial.println();
-        Serial.println(mess);
-        Serial.println();
-      break;
-    }
-  }
-
-  */
-  
-
-/*
-  Serial.println("GET /bot611081761:AAFbNKvK1EcOeGacpb2BjicNlWh7tMNVkaI/GetUpdates HTTP/1.1");
-  Serial.println("Host: dg-telegram-bot-2.herokuapp.com");
-  Serial.println("User-Agent: ESP");
-  Serial.println("Accept: * / *"); !!!!!!!!
-  Serial.println("Cache-Control: no-cache");
-  Serial.println("");
-  Serial.println("");
-*/
-
-/*
-  {"ok":true,"result":[{"update_id":1372570,
-"message":{"message_id":1168,"from":{"id":199220133,"is_bot":false,"first_name":
-"Dmitriy","last_name":"Grigoriev","language_code":"ru"},"chat":{"id":199220133,"
-first_name":"Dmitriy","last_name":"Grigoriev","type":"private"},"date":157323807
-9,"text":"Hhhghnmjhbb"}}]}
-*/
-
-
-
-/*
-    DynamicJsonBuffer jsonBuffer;
-    String response = mess.substring(mess.indexOf('{'));
-    //Serial.println(response);
-    JsonObject &root = jsonBuffer.parseObject(response);
-    Serial.println("JSON");
-    root.printTo(Serial);
-    if (root.success()) {
-      if (root.containsKey("result")) {
-        int resultArrayLength = root["result"].size();
-        if (resultArrayLength > 0) {
-          int newMessageIndex = 0;
-          // Step through all results
-          for (int i = 0; i < resultArrayLength; i++) {
-            JsonObject &result = root["result"][i];
-            if (processResult(result, newMessageIndex)) {
-              newMessageIndex++;
-            }
-          }
-          // We will keep the client open because there may be a response to be
-          // given
-        } else {
-          if (_debug)
-            Serial.println(F("[Bot]no new messages"));
-        }
-      } else {
-        if (_debug)
-          Serial.println(F("[Bot]Response contained no 'result'"));
-      }
-    } else { // Parsing failed
-      if (response.length() < 2) { // Too short a message. Maybe connection issue
-        if (_debug)
-          Serial.println(F("[Bot]Parsing error: Message too short"));
-      } else {
-        // Buffer may not be big enough, increase buffer or reduce max number of
-        // messages
-        if (_debug)
-          Serial.println(F("[Bot]Failed to parse update, the message could be too "
-                           "big for the buffer"));
-      }
-    }
-
-Serial.println(messages[0].text);
-*/
-
-/*
-if (messages[0].text == "Hhhghnmjhbb") {
-  Serial.println("Photo");
-  String path = writeFile(SD_MMC);
-  Serial.println(path);
-  readFile(SD_MMC, path); //"/picture1.jpg"
-}
-*/
-
-
-
-
-
 
   Serial.print("Done");
 }
 
 void loop() {
-
-
 
     if (millis() > Bot_lasttime + Bot_mtbs)  {
       int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
@@ -307,89 +122,6 @@ void loop() {
 
 }
 
-/*
-bool processResult(JsonObject &result, int messageIndex) {
-  int update_id = result["update_id"];
-  // Check have we already dealt with this message (this shouldn't happen!)
-  if (last_message_received != update_id) {
-    last_message_received = update_id;
-    messages[messageIndex].update_id = update_id;
-
-    messages[messageIndex].text = F("");
-    messages[messageIndex].from_id = F("");
-    messages[messageIndex].from_name = F("");
-    messages[messageIndex].longitude = 0;
-    messages[messageIndex].latitude = 0;
-
-    if (result.containsKey("message")) {
-      JsonObject &message = result["message"];
-      messages[messageIndex].type = F("message");
-      messages[messageIndex].from_id = message["from"]["id"].as<String>();
-      messages[messageIndex].from_name =
-          message["from"]["first_name"].as<String>();
-
-      messages[messageIndex].date = message["date"].as<String>();
-      messages[messageIndex].chat_id = message["chat"]["id"].as<String>();
-      messages[messageIndex].chat_title = message["chat"]["title"].as<String>();
-
-      if (message.containsKey("text")) {
-        messages[messageIndex].text = message["text"].as<String>();
-
-      } else if (message.containsKey("location")) {
-        messages[messageIndex].longitude =
-            message["location"]["longitude"].as<float>();
-        messages[messageIndex].latitude =
-            message["location"]["latitude"].as<float>();
-      }
-    } else if (result.containsKey("channel_post")) {
-      JsonObject &message = result["channel_post"];
-      messages[messageIndex].type = F("channel_post");
-
-      messages[messageIndex].text = message["text"].as<String>();
-      messages[messageIndex].date = message["date"].as<String>();
-      messages[messageIndex].chat_id = message["chat"]["id"].as<String>();
-      messages[messageIndex].chat_title = message["chat"]["title"].as<String>();
-
-    } else if (result.containsKey("callback_query")) {
-      JsonObject &message = result["callback_query"];
-      messages[messageIndex].type = F("callback_query");
-      messages[messageIndex].from_id = message["from"]["id"].as<String>();
-      messages[messageIndex].from_name =
-          message["from"]["first_name"].as<String>();
-
-      messages[messageIndex].text = message["data"].as<String>();
-      messages[messageIndex].date = message["date"].as<String>();
-      messages[messageIndex].chat_id =
-          message["message"]["chat"]["id"].as<String>();
-      messages[messageIndex].chat_title = F("");
-    } else if (result.containsKey("edited_message")) {
-      JsonObject &message = result["edited_message"];
-      messages[messageIndex].type = F("edited_message");
-      messages[messageIndex].from_id = message["from"]["id"].as<String>();
-      messages[messageIndex].from_name =
-          message["from"]["first_name"].as<String>();
-
-      messages[messageIndex].date = message["date"].as<String>();
-      messages[messageIndex].chat_id = message["chat"]["id"].as<String>();
-      messages[messageIndex].chat_title = message["chat"]["title"].as<String>();
-
-      if (message.containsKey("text")) {
-        messages[messageIndex].text = message["text"].as<String>();
-
-      } else if (message.containsKey("location")) {
-        messages[messageIndex].longitude =
-            message["location"]["longitude"].as<float>();
-        messages[messageIndex].latitude =
-            message["location"]["latitude"].as<float>();
-      }
-    }
-
-    return true;
-  }
-  return false;
-}
-*/
-
 
 //Read a file in SD card
 void readFile(fs::FS &fs, String path, String chat_id){
@@ -413,10 +145,6 @@ void readFile(fs::FS &fs, String path, String chat_id){
     } else {
       Serial.println("was not sent");
     }
-
-    //while(file.available()){
-    //   Serial.write(file.read());
-    //}
 }
 
 
@@ -468,172 +196,6 @@ bool isMoreDataAvailable(){
 byte getNextByte(){
   return file.read();
 }
-
-/*
-String sendPhotoByBinary(
-    String chat_id, String contentType, int fileSize,
-    MoreDataAvailable moreDataAvailableCallback,
-    GetNextByte getNextByteCallback) {
-
-  if (_debug)
-    Serial.println("SEND Photo");
-
-  String response = sendMultipartFormDataToTelegram(
-      "sendPhoto", "photo", "img.jpg", contentType, chat_id, fileSize,
-      moreDataAvailableCallback, getNextByteCallback);
-
-  if (_debug)
-    Serial.println(response);
-
-  return response;
-}
-*/
-
-/*
-
-String sendMultipartFormDataToTelegram(
-    String command, String binaryProperyName, String fileName,
-    String contentType, String chat_id, int fileSize,
-    MoreDataAvailable moreDataAvailableCallback,
-    GetNextByte getNextByteCallback) {
-
-  String body = "";
-  String headers = "";
-  long now;
-  bool responseReceived;
-  String boundry = F("------------------------b8f610217e83e29b");
-
-  // Connect with api.telegram.org if not already connected
-  if (!client.connected()) {
-    if (_debug)
-      Serial.println(F("[BOT Client]Connecting to server"));
-    if (!client.connect(HOST, SSL_PORT)) {
-      if (_debug)
-        Serial.println(F("[BOT Client]Conection error"));
-    }
-  }
-  if (client.connected()) {
-
-    String start_request = "";
-    String end_request = "";
-
-    start_request = start_request + "--" + boundry + "\r\n";
-    start_request = start_request +
-                    "content-disposition: form-data; name=\"chat_id\"" + "\r\n";
-    start_request = start_request + "\r\n";
-    start_request = start_request + chat_id + "\r\n";
-
-    start_request = start_request + "--" + boundry + "\r\n";
-    start_request = start_request + "content-disposition: form-data; name=\"" +
-                    binaryProperyName + "\"; filename=\"" + fileName + "\"" +
-                    "\r\n";
-    start_request = start_request + "Content-Type: " + contentType + "\r\n";
-    start_request = start_request + "\r\n";
-
-    end_request = end_request + "\r\n";
-    end_request = end_request + "--" + boundry + "--" + "\r\n";
-
-    client.print("POST /bot611081761:AAFbNKvK1EcOeGacpb2BjicNlWh7tMNVkaI/" + command);
-    client.println(F(" HTTP/1.1"));
-    // Host header
-    client.print(F("Host: "));
-    client.println(HOST);
-    client.println(F("User-Agent: arduino/1.0"));
-    client.println(F("Accept: * / *"));
-
-    int contentLength =
-        fileSize + start_request.length() + end_request.length();
-    if (_debug)
-      Serial.println("Content-Length: " + String(contentLength));
-    client.print("Content-Length: ");
-    client.println(String(contentLength));
-    client.println("Content-Type: multipart/form-data; boundary=" + boundry);
-    client.println("");
-
-    client.print(start_request);
-
-    if (_debug)
-      Serial.print(start_request);
-
-    byte buffer[512];
-    int count = 0;
-    char ch;
-    while (moreDataAvailableCallback()) {
-      buffer[count] = getNextByteCallback();
-      // client->write(ch);
-      // Serial.write(ch);
-      count++;
-      if (count == 512) {
-        // yield();
-        if (_debug) {
-          Serial.println(F("Sending full buffer"));
-        }
-        client.write((const uint8_t *)buffer, 512);
-        count = 0;
-      }
-    }
-
-    if (count > 0) {
-      if (_debug) {
-        Serial.println(F("Sending remaining buffer"));
-      }
-      client.write((const uint8_t *)buffer, count);
-    }
-
-    client.print(end_request);
-    if (_debug)
-      Serial.print(end_request);
-
-    count = 0;
-    int ch_count = 0;
-    char c;
-    now = millis();
-    bool finishedHeaders = false;
-    bool currentLineIsBlank = true;
-
-    int waitForResponse = 10000;
-    const int maxMessageLength = 2000;
-
-
-    while (millis() - now < waitForResponse) {
-      while (client.available()) {
-        char c = client.read();
-        responseReceived = true;
-
-        if (!finishedHeaders) {
-          if (currentLineIsBlank && c == '\n') {
-            finishedHeaders = true;
-          } else {
-            headers = headers + c;
-          }
-        } else {
-          if (ch_count < maxMessageLength) {
-            body = body + c;
-            ch_count++;
-          }
-        }
-
-        if (c == '\n') {
-          currentLineIsBlank = true;
-        } else if (c != '\r') {
-          currentLineIsBlank = false;
-        }
-      }
-
-      if (responseReceived) {
-        if (_debug) {
-          Serial.println();
-          Serial.println(body);
-          Serial.println();
-        }
-        break;
-      }
-    }
-  }
-
-  return body;
-}
-*/
 
 
 void camera_init(){
