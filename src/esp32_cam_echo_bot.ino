@@ -1,4 +1,4 @@
-#include "secure.h"
+#include "secure.h" // ssid, password and BOTtoken
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -54,6 +54,7 @@ byte getNextByte();
 
 void readFile(fs::FS &fs, String path, String chat_id);
 String writeFile(fs::FS &fs);
+void sendFile(fs::FS &fs, String chat_id);
 
 File file;
 
@@ -106,9 +107,14 @@ void loop() {
         for (int i=0; i<numNewMessages; i++) {
           if ((bot.messages[i].text == "image") || (bot.messages[i].text == "Image")) {
             Serial.println("Photo");
-            String path = writeFile(SD_MMC);
-            Serial.println(path);
-            readFile(SD_MMC, path, bot.messages[i].chat_id);
+            
+            //with SD card
+            //String path = writeFile(SD_MMC);
+            //Serial.println(path);
+            //readFile(SD_MMC, path, bot.messages[i].chat_id);
+
+            //without SD card
+            sendFile(SD_MMC, bot.messages[i].chat_id);
           } else {
             bot.sendMessage(bot.messages[i].chat_id, bot.messages[i].text, "");  
           }
@@ -186,6 +192,53 @@ String writeFile(fs::FS &fs){
   Serial.printf("Saved");
 
   return path;
+}
+
+
+//Read a file in SD card
+void sendFile(fs::FS &fs, String chat_id){
+
+  camera_fb_t * fb = NULL;
+
+  // Сделать снимок с помощью камеры
+  fb = esp_camera_fb_get();  
+  if(!fb) {
+    Serial.println("Camera capture failed");
+  } else {
+    Serial.printf("Sending file");
+
+    String path = "/picture_to_bot.jpg";
+
+    file = fs.open(path, FILE_WRITE);
+    if(!file){
+        Serial.println("Failed to open file in writing mode");
+    } 
+    else {
+      file.write(fb->buf, fb->len); 
+      Serial.printf("Saved file to path: %s\n", path.c_str());
+      file.close();
+
+      file = fs.open(path);
+      if(!file){
+          Serial.println("Failed to open file for reading");
+      } else {
+        //Content type for PNG image/png
+        String sent = bot.sendPhotoByBinary(chat_id, "image/jpeg", file.size(),
+            isMoreDataAvailable,
+            getNextByte);
+
+        if (sent) {
+          Serial.println("was successfully sent");
+        } else {
+          Serial.println("was not sent");
+        }
+
+      file.close(); 
+      }
+    }
+  }
+
+  esp_camera_fb_return(fb);
 }
 
 
